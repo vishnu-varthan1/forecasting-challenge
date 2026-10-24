@@ -28,7 +28,7 @@ def generate_predictions(data_dir: Path) -> pd.DataFrame:
         readings["avg_cpu"], errors="coerce"
     )
 
-   
+
     readings = readings.drop_duplicates(
         subset=["timestamp", "vm_id"], keep="first"
     )
@@ -43,7 +43,7 @@ def generate_predictions(data_dir: Path) -> pd.DataFrame:
         .reset_index(drop=True)
     )
 
-    
+
     horizon = 24
     if len(targets) <= horizon:
         raise ValueError(
@@ -54,7 +54,7 @@ def generate_predictions(data_dir: Path) -> pd.DataFrame:
     train = targets.iloc[:-horizon]
     holdout = targets.iloc[-horizon:]
 
-   
+
     active_count = train["active_vm_count"].iloc[-1]
     cpu_history = train["aggregate_cpu_utilization"].dropna()
 

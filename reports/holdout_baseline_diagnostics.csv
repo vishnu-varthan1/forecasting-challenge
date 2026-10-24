@@ -1,0 +1,5 @@
+target,model,MAE,RMSE
+active_vm_count,persistence,0.0,0.0
+active_vm_count,moving_average_12,0.0,0.0
+aggregate_cpu_utilization,persistence,0.14678245915042454,0.18478539074333752
+aggregate_cpu_utilization,moving_average_12,0.12300415479471938,0.16127109237970694

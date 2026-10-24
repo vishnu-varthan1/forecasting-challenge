@@ -7,6 +7,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 PREDICTIONS_FILE = ROOT / "predictions.csv"
+READINGS_FILE = ROOT / "challenge_data" / "vm_cpu_readings.csv.gz"
 
 EXPECTED_COLUMNS = [
     "timestamp",
@@ -18,8 +19,7 @@ EXPECTED_COLUMNS = [
 @pytest.fixture(scope="module")
 def predictions():
     assert PREDICTIONS_FILE.exists(), (
-        "predictions.csv is missing. Run "
-        "'python generate_predictions.py' first."
+        "predictions.csv is missing. Run run_pipeline.py first."
     )
     return pd.read_csv(PREDICTIONS_FILE)
 
@@ -33,7 +33,16 @@ def test_exactly_24_forecasts(predictions):
 
 
 def test_expected_holdout_timestamps(predictions):
-    expected = np.arange(33000, 40000, 300)
+    assert READINGS_FILE.exists(), f"Dataset not found: {READINGS_FILE}"
+
+    timestamps = pd.read_csv(
+        READINGS_FILE, usecols=["timestamp"]
+    )["timestamp"].dropna().unique()
+
+    assert len(timestamps) >= 25
+
+    expected = np.sort(timestamps)[-24:]
+
     np.testing.assert_array_equal(
         predictions["timestamp"].to_numpy(),
         expected,
@@ -63,5 +72,4 @@ def test_active_vm_count_is_valid(predictions):
 
 def test_cpu_utilization_is_in_valid_range(predictions):
     cpu = predictions["aggregate_cpu_utilization"]
-
     assert cpu.between(0, 100).all()
