@@ -1,0 +1,17 @@
+split,train_rows,validation_rows,target,model,MAE,RMSE
+1,62,12,active_vm_count,persistence,0.0,0.0
+1,62,12,active_vm_count,moving_average_12,0.0,0.0
+1,62,12,aggregate_cpu_utilization,persistence,0.15086373682596932,0.17942059816571754
+1,62,12,aggregate_cpu_utilization,moving_average_12,0.10963175329691222,0.13239318531200267
+2,74,12,active_vm_count,persistence,0.0,0.0
+2,74,12,active_vm_count,moving_average_12,0.0,0.0
+2,74,12,aggregate_cpu_utilization,persistence,0.10329600854405403,0.1271284979162893
+2,74,12,aggregate_cpu_utilization,moving_average_12,0.3228115331199402,0.33740776272196055
+3,86,12,active_vm_count,persistence,0.0,0.0
+3,86,12,active_vm_count,moving_average_12,0.0,0.0
+3,86,12,aggregate_cpu_utilization,persistence,0.10182181578155831,0.12745647076006822
+3,86,12,aggregate_cpu_utilization,moving_average_12,0.0918250847885765,0.1152482764822838
+4,98,12,active_vm_count,persistence,0.0,0.0
+4,98,12,active_vm_count,moving_average_12,0.0,0.0
+4,98,12,aggregate_cpu_utilization,persistence,0.08757823581484588,0.10376606645395454
+4,98,12,aggregate_cpu_utilization,moving_average_12,0.09833850747216862,0.11447049232416147

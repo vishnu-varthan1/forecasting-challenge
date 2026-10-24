@@ -1,4 +1,16 @@
+
 *.egg-info/
 .venv/
 .pytest_cache/
 __pycache__/
+*.py[cod]
+
+# Downloaded datasets and archives
+challenge_data/*.tar.gz
+challenge_data/*.zip
+challenge_data/*.csv.gz
+
+# Local environment variables and secrets
+.env
+.env.*
+!.env.example

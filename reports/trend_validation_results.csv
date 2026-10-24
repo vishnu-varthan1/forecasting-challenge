@@ -1,0 +1,17 @@
+split,target,model,MAE,RMSE
+1,active_vm_count,persistence,0.0,0.0
+1,active_vm_count,linear_trend,3.637978807091713e-12,3.637978807091713e-12
+1,aggregate_cpu_utilization,persistence,0.15086373682596932,0.17942059816571754
+1,aggregate_cpu_utilization,linear_trend,0.12741348827008636,0.1608127431392052
+2,active_vm_count,persistence,0.0,0.0
+2,active_vm_count,linear_trend,1.8189894035458565e-12,1.8189894035458565e-12
+2,aggregate_cpu_utilization,persistence,0.10329600854405403,0.1271284979162893
+2,aggregate_cpu_utilization,linear_trend,0.33946672526930427,0.35267135411080175
+3,active_vm_count,persistence,0.0,0.0
+3,active_vm_count,linear_trend,0.0,0.0
+3,aggregate_cpu_utilization,persistence,0.10182181578155831,0.12745647076006822
+3,aggregate_cpu_utilization,linear_trend,0.2751073657067458,0.2910550047858216
+4,active_vm_count,persistence,0.0,0.0
+4,active_vm_count,linear_trend,7.73070496506989e-12,7.77072613829435e-12
+4,aggregate_cpu_utilization,persistence,0.08757823581484588,0.10376606645395454
+4,aggregate_cpu_utilization,linear_trend,0.23231849111901917,0.2504597198247766
