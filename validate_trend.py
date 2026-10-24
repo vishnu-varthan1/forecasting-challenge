@@ -42,7 +42,7 @@ for split, (end, horizon) in enumerate(SPLITS, start=1):
         for method in ["persistence", "linear_trend"]:
             prediction = forecast(history, target, horizon, method)
 
-            # Apply target-specific constraints.
+            
             if target == "active_vm_count":
                 prediction = np.maximum(0, prediction)
             else:

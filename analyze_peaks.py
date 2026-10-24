@@ -8,7 +8,7 @@ predictions = pd.read_csv("predictions.csv")
 train = targets.iloc[:110]
 actual = targets.iloc[110:].copy()
 
-# Define peak CPU using the 90th percentile of training observations.
+
 peak_threshold = train["aggregate_cpu_utilization"].quantile(0.90)
 
 evaluation = actual[

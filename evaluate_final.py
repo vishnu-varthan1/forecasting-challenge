@@ -5,7 +5,7 @@ import pandas as pd
 targets = pd.read_csv("reports/target_series.csv")
 predictions = pd.read_csv("predictions.csv")
 
-# Actual holdout targets are used only for final evaluation.
+
 actual = targets.iloc[110:].copy()
 
 assert len(actual) == 24

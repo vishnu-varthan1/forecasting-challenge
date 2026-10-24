@@ -7,8 +7,7 @@ train = targets.iloc[:110].reset_index(drop=True)
 
 TARGETS = ["active_vm_count", "aggregate_cpu_utilization"]
 
-# Each tuple is (end of training window, validation horizon).
-# All validation observations are within the first 110 timestamps.
+
 SPLITS = [
     (62, 12),
     (74, 12),

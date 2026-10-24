@@ -3,14 +3,13 @@ import pandas as pd
 
 targets = pd.read_csv("reports/target_series.csv")
 
-# The final 24 observations are reserved for final evaluation.
 train = targets.iloc[:110].copy()
 holdout = targets.iloc[110:].copy()
 
 assert len(train) == 110
 assert len(holdout) == 24
 
-# Persistence forecasts the most recent training value.
+
 last_active_count = float(train["active_vm_count"].iloc[-1])
 last_cpu = float(train["aggregate_cpu_utilization"].iloc[-1])
 
@@ -22,7 +21,7 @@ predictions = pd.DataFrame({
     ] * 24,
 })
 
-# Enforce the submission contract.
+
 assert list(predictions.columns) == [
     "timestamp",
     "active_vm_count",
