@@ -1,17 +1,17 @@
 # Cloud Workload Forecasting Challenge
 
-An AI/ML take-home project analyzing virtual-machine telemetry from the Microsoft Azure Public Dataset V2. This implementation explores workload characteristics, compares time-series forecasting baselines, evaluates a reserved holdout, and develops capacity-planning recommendations.
+An AI/ML engineering take-home project analyzing virtual-machine telemetry from the Microsoft Azure Public Dataset V2. This project explores workload characteristics, compares forecasting baselines, evaluates a reserved holdout, and develops capacity-planning recommendations.
 
-## Project Overview
+## 1. Project Overview
 
 The project forecasts two workload metrics at five-minute intervals:
 
 - **`active_vm_count`** — the number of distinct VMs observed at each timestamp.
 - **`aggregate_cpu_utilization`** — the mean of VM-level `avg_cpu` measurements at each timestamp, expressed as a percentage.
 
-The supplied trace contains 10,000 VMs with 134 readings per VM, resulting in 1,340,000 CPU observations across 134 timestamps. The period from the first to the final timestamp spans approximately 11.08 hours.
+The supplied trace contains 10,000 VMs with 134 readings per VM, resulting in 1,340,000 CPU observations across 134 timestamps. The interval between the first and final timestamps is approximately 11.08 hours.
 
-## Environment Setup
+## 2. Environment Setup
 
 Python 3.11 or newer is required.
 
@@ -21,7 +21,7 @@ Create and activate a virtual environment:
 
 ```powershell
 py -m venv .venv
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 ```
 
 Install the project and development dependencies:
@@ -40,13 +40,15 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-## Dataset Setup
+## 3. Dataset Setup
 
 The fixed `data-v1` dataset is distributed through the challenge's GitHub release.
 
 **Download:** [Azure Dataset v1 Release](https://github.com/atomityhq/forecasting-challenge/releases/tag/data-v1)
 
-Download `data-v1.tar.gz` and extract it into the repository's `challenge_data/` directory according to the release instructions. The expected dataset files include:
+Download `data-v1.tar.gz` from the release and extract the dataset into the repository's `challenge_data/` directory.
+
+The expected dataset files include:
 
 ```text
 challenge_data/
@@ -64,13 +66,33 @@ sha256sum -c SHA256SUMS
 cd ..
 ```
 
-On Windows, use PowerShell's `Get-FileHash` and compare the results against `SHA256SUMS` if `sha256sum` is unavailable.
+On Windows, use PowerShell's `Get-FileHash` to compare file hashes against `SHA256SUMS` if `sha256sum` is unavailable.
 
-Do not substitute a different dataset version. The downloaded data archives should remain local rather than being committed to the repository.
+Use the exact dataset release provided for this challenge. Do not substitute another dataset version. Large dataset archives and raw compressed data files should remain local rather than being committed to Git.
 
-## Analysis Workflow
+## 4. Generate the Required Predictions
 
-Run these commands from the repository root after installing dependencies and extracting the dataset:
+After installing dependencies and extracting the dataset, run this single command from the repository root:
+
+```powershell
+python run_pipeline.py --data challenge_data --output predictions.csv
+```
+
+The pipeline reads the supplied CPU readings, constructs the aggregate workload time series, reserves the final 24 timestamps for forecasting, and writes `predictions.csv`.
+
+The output contains exactly three columns:
+
+```text
+timestamp,active_vm_count,aggregate_cpu_utilization
+```
+
+The generated file must contain 24 chronological rows, with no duplicate timestamps or non-finite predictions. Active VM counts must be non-negative, and CPU utilization predictions must be between 0 and 100.
+
+The persistence baseline uses training observations preceding the final 24 timestamps. Actual holdout target values are not used for model fitting or model selection.
+
+## 5. Analysis Workflow
+
+The following commands reproduce the supporting analyses. Run them from the repository root after setting up the environment and dataset.
 
 ```powershell
 python inspect_data.py
@@ -84,7 +106,7 @@ python analyze_capacity.py
 python -m pytest -q
 ```
 
-The scripts perform the following tasks:
+The scripts serve these purposes:
 
 | Script | Purpose |
 |---|---|
@@ -92,26 +114,28 @@ The scripts perform the following tasks:
 | `build_targets.py` | Construct the aggregate target time series |
 | `validate_baselines.py` | Compare persistence and moving-average baselines using chronological validation |
 | `validate_trend.py` | Evaluate a linear-trend candidate using chronological validation |
-| `generate_predictions.py` | Generate the final 24-row forecast |
+| `generate_predictions.py` | Generate the final 24-row forecast from the prepared target series |
 | `evaluate_final.py` | Evaluate the frozen forecast against the holdout |
 | `analyze_peaks.py` | Evaluate whether holdout observations meet the training-derived peak threshold |
 | `analyze_capacity.py` | Summarize training CPU statistics and illustrative headroom scenarios |
 
-## Validation Methodology
+The main prediction command is `python run_pipeline.py --data challenge_data --output predictions.csv`. The other scripts provide detailed analysis and validation.
 
-The first 110 observations are used for model development and time-aware validation. The final 24 observations are held out for the two-hour forecast evaluation.
+## 6. Validation Methodology
 
-Four chronological validation splits are used, with training histories of 62, 74, 86, and 98 observations. Each split forecasts the next 12 observations. The data is not randomly shuffled.
+The first 110 observations form the model development and validation window. The final 24 observations represent the two-hour forecast horizon.
+
+Four chronological validation splits use training histories of 62, 74, 86, and 98 observations. Each split forecasts the next 12 observations. The series is not randomly shuffled.
 
 Three CPU forecasting approaches were compared:
 
-- **Persistence:** repeat the most recent observed value.
-- **Moving average (12):** use the mean of the latest 12 observations.
-- **Linear trend:** fit a straight line to the historical observations and extrapolate it.
+- **Persistence:** repeats the most recent observed value.
+- **Moving average (12):** uses the mean of the latest 12 observations.
+- **Linear trend:** fits a straight line to historical observations and extrapolates it into the forecast horizon.
 
-Model selection uses the chronological validation results within the first 110 observations, not the final holdout results.
+Model selection uses chronological validation results entirely within the first 110 observations. The final 24 target values are held out for final evaluation and are not used to select the model.
 
-## Validation Results
+## 7. Validation Results
 
 Mean validation metrics for aggregate CPU utilization were:
 
@@ -121,9 +145,13 @@ Mean validation metrics for aggregate CPU utilization were:
 | Moving average (12) | 0.155652 | 0.174880 |
 | Linear trend | 0.243576 | 0.263750 |
 
-CPU forecast errors are measured in **percentage points**. Persistence was selected because it achieved the lowest mean validation MAE and RMSE among the tested candidates.
+CPU forecast errors are measured in **percentage points**.
 
-## Final Holdout Results
+Persistence was selected because it achieved the lowest mean validation MAE and RMSE among the tested approaches. Its mean validation MAE was approximately 28.8% lower than the moving-average model and 54.5% lower than the linear-trend model.
+
+The linear-trend model performed better in the first validation split but substantially worse in the remaining three, indicating that linear extrapolation was unreliable for this short trace.
+
+## 8. Final Holdout Results
 
 The selected persistence model was fitted using the first 110 observations and evaluated against the final 24 observations.
 
@@ -132,19 +160,21 @@ The selected persistence model was fitted using the first 110 observations and e
 | Active VM count | 0.000000 | 0.000000 |
 | Aggregate CPU utilization | 0.146782 | 0.184785 |
 
-The active VM count remained constant at 10,000 throughout the trace, so its zero forecast error reflects the constant target rather than demonstrated performance under VM churn.
+Aggregate CPU utilization achieved an MAE of 0.146782 percentage points and an RMSE of 0.184785 percentage points.
 
-The CPU model's MAE was 0.146782 percentage points, with an RMSE of 0.184785 percentage points.
+Active VM count remained constant at 10,000 throughout the observed trace. Its zero forecast error therefore reflects the constant target rather than demonstrated performance under VM arrivals or departures.
 
-## Peak-Period Analysis
+The holdout mean CPU utilization was 9.268988%, and the maximum was 9.635990%. The persistence forecast repeats the last training CPU observation, approximately 9.164556%.
+
+## 9. Peak-Period Analysis
 
 The 90th percentile of aggregate CPU utilization in the training window was 9.668362%. This threshold was calculated using training observations only.
 
 None of the 24 holdout observations met or exceeded the threshold. The maximum holdout CPU utilization was 9.635990%, so peak-specific holdout MAE and RMSE could not be calculated.
 
-The absence of peak observations limits conclusions about performance during workload surges. It does not establish that the forecasting approach would remain accurate during sudden demand increases or sustained high utilization.
+The absence of qualifying peak observations limits conclusions about model performance during workload surges. It does not demonstrate that persistence would remain accurate during sudden demand increases or sustained high utilization.
 
-## Capacity-Planning Recommendations
+## 10. Capacity-Planning Recommendations
 
 Training-window statistics were:
 
@@ -159,23 +189,30 @@ Training-window statistics were:
 
 Illustrative capacity factors under a proportional-demand assumption are:
 
-- A 50% target utilization corresponds to 2.00× current demand.
-- A 60% target utilization corresponds to approximately 1.67× current demand.
-- A 70% target utilization corresponds to approximately 1.43× current demand.
+- **50% target utilization:** 2.00× current demand.
+- **60% target utilization:** approximately 1.67× current demand.
+- **70% target utilization:** approximately 1.43× current demand.
 
-These are planning scenarios, not validated production recommendations. Production capacity decisions require workload-specific load testing, service-level objectives, and consideration of memory, networking, CPU contention, failure recovery, and demand growth.
+These factors are illustrative planning scenarios, not validated production recommendations. Actual capacity requirements depend on expected workload growth, VM sizing, CPU contention, memory and network bottlenecks, service-level objectives, and recovery requirements.
 
-Monitor aggregate and per-VM CPU utilization, active VM counts, and service-level indicators. Use sustained demand patterns and validated thresholds when investigating scaling actions rather than relying on a single short-horizon forecast.
+Recommended operational practices include:
 
-## Repository Outputs
+1. Monitor aggregate and per-VM CPU utilization, active VM counts, and service-level indicators.
+2. Investigate scaling when utilization remains elevated or demand trends exceed validated thresholds.
+3. Maintain sufficient capacity headroom for demand increases, instance failures, and recovery operations.
+4. Validate scaling policies using load tests and workloads containing realistic peaks and VM churn.
+5. Recalculate forecasts as new observations arrive and measure performance over multiple time windows.
 
-- `predictions.csv` — the 24-row forecast with columns `timestamp`, `active_vm_count`, and `aggregate_cpu_utilization`.
-- `reports/target_series.csv` — the constructed aggregate time series.
-- `reports/validation_results.csv` and `reports/validation_summary.csv` — baseline validation results.
-- `reports/trend_validation_results.csv` and `reports/trend_validation_summary.csv` — linear-trend validation results.
-- `reports/final_report.md` — detailed methodology, evaluation results, capacity-planning discussion, and limitations.
+## 11. Repository Outputs
 
-## Tests
+- `run_pipeline.py` — the single-command prediction pipeline.
+- `predictions.csv` — the 24-row forecast with the required three columns.
+- `reports/target_series.csv` — the constructed aggregate target series.
+- `reports/validation_results.csv` and `reports/validation_summary.csv` — chronological baseline validation results.
+- `reports/trend_validation_results.csv` and `reports/trend_validation_summary.csv` — linear-trend comparison results.
+- `reports/final_report.md` — detailed methodology, results, capacity-planning discussion, and limitations.
+
+## 12. Tests
 
 Run the test suite from the repository root:
 
@@ -183,15 +220,15 @@ Run the test suite from the repository root:
 python -m pytest -q
 ```
 
-The current test suite passes two tests.
+The current local test suite passes nine tests, including validation of prediction columns, row count, timestamps, numeric values, and allowed output ranges.
 
-## Limitations and Future Improvements
+## 13. Limitations and Future Improvements
 
-The trace covers approximately 11.08 hours and has a constant active VM count and relatively limited aggregate CPU variation. It does not adequately demonstrate forecast performance during abrupt workload spikes, VM arrivals or departures, or sustained high-load conditions.
+The trace covers approximately 11.08 hours and contains a constant active VM count and relatively limited variation in aggregate CPU utilization. It does not sufficiently demonstrate forecast performance during abrupt workload spikes, VM arrivals or departures, or sustained high-load conditions.
 
-Future work should evaluate longer and more varied traces, include periods with genuine peak demand, and use repeated rolling-origin validation. Additional forecasting methods may be investigated when justified by the available data. Forecast monitoring, uncertainty estimates, and load testing should be implemented before using forecasts for production scaling decisions.
+Future work should evaluate longer and more varied traces, include periods with genuine peak demand, and use repeated rolling-origin validation. Additional forecasting models may be investigated when justified by the available data. Forecast monitoring, uncertainty estimates, and load testing should be considered before forecasts are used for production scaling decisions.
 
-## References and Assignment Instructions
+## 14. References and Assignment Instructions
 
 - [Assignment instructions](ASSIGNMENT.md)
 - [Dataset documentation](DATASET.md)
